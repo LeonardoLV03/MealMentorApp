@@ -1,0 +1,15 @@
+{
+    "id": 1,
+    "calories": "2200",
+    "goal": "Bajar Peso",
+    "contentByDay": [
+      "Desayuno - Tostadas integrales con tomate y aceite de oliva. Almuerzo - Ensalada griega con queso feta y aceitunas. Cena - Salmón a la parrilla con verduras asadas.",
+      "Desayuno - Yogur griego con frutas frescas y miel. Almuerzo - Pita de pollo con tzatziki y ensalada. Cena - Paella de mariscos.",
+      "Desayuno - Batido de frutas con espinacas y semillas de chía. Almuerzo - Bruschetta de tomate y albahaca. Cena - Filete de ternera con espárragos al vapor.",
+      "Desayuno - Tortilla española con patatas y cebolla. Almuerzo - Gazpacho andaluz con pan integral. Cena - Risotto de champiñones.",
+      "Desayuno - Tostadas con aguacate y huevo pochado. Almuerzo - Rollitos de verduras al vapor con salsa de soja. Cena - Pescado al horno con hierbas aromáticas.",
+      "Desayuno - Smoothie bowl con granola y frutos secos. Almuerzo - Ensalada de lentejas con vinagreta balsámica. Cena - Pollo al limón con espárragos.",
+      "Desayuno - Pan integral con aceite de oliva y jamón serrano. Almuerzo - Pasta integral con pesto de albahaca y piñones. Cena - Sopa de pescado y marisco."
+    ],
+    "startDate": "04-05-2024"
+}

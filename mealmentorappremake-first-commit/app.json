@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "mealmentorapp",
+    "slug": "mealmentorapp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/MealMentorLogo.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/MealMentorLogo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/MealMentorLogoWithBackground.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "favicon": "./assets/MealMentorLogo.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "1bea88be-71f5-476e-9a9b-b89afd399709"
+      }
+    },
+    "owner": "alan_yehoshua"
+  }
+}
