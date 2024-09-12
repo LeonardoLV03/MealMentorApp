@@ -1,26 +1,23 @@
-import Constants from 'expo-constants'
-import { 
-    View, 
-    Text, 
-    Image,
-    StyleSheet,
-    } from "react-native";
+import Constants from 'expo-constants';
+import { View, Text, Image, StyleSheet } from 'react-native';
 
-export function Top({page}){
-    return(
+export function Top({ page }) {
+    return (
         <View style={styles.Top}>
-                <Image 
+            <Image 
                 source={require('../../assets/MealMentorLogo.png')}
                 style={styles.Image}
                 alt='Logo-MealMentor'
-                />
-                <Text style={{textAlign: 'center', fontSize: 32}}>ealMentor - {page}</Text>
+            />
+            <Text style={styles.title}>
+                ealMentor
+            </Text>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    Top:{
+    Top: {
         marginTop: Constants.statusBarHeight, 
         borderBottomWidth: 2,
         borderRightWidth: 1,
@@ -29,10 +26,20 @@ const styles = StyleSheet.create({
         borderBottomEndRadius: 10,
         flexDirection: 'row',
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        paddingVertical: 5, 
+        backgroundColor: '#0000',
+        
     },
-    Image:{
-        height: 57,
-        width: 55
-    }
-})
+    Image: {
+        height: 45, 
+        width: 43,
+        marginRight: 8,
+    },
+    title: {
+        textAlign: 'center',
+        fontSize: 24, 
+        color: '#D3A357',
+        fontWeight: 'bold',
+    },
+});

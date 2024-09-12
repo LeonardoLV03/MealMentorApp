@@ -93,7 +93,7 @@ export function Login() {
             <Text style={styles.modalTitle}>¿Cuál es tu usuario?</Text>
             <TextInput
               style={styles.input}
-              placeholder="Correo electrónico"
+              placeholder="Usuario"
               placeholderTextColor="#888"
               value={user}
               onChangeText={setUser}

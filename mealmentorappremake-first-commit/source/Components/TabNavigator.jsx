@@ -1,29 +1,58 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home } from "./Home";
+import Icon from 'react-native-vector-icons/Ionicons'; // Importa la librería de íconos
+import { Home } from './Home';
 import { Recipes } from './Recipe';
 import { Plan } from './Plan';
 
+const Tab = createBottomTabNavigator();
 
-export function Tabs({ route }){
-  const data  = route.params;
-    const Tab = createBottomTabNavigator();
-    return (
-    <Tab.Navigator>
-        <Tab.Screen 
+export function Tabs({ route }) {
+  const data = route.params;
+
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+
+          if (route.name === 'Inicio') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Recetas') {
+            iconName = focused ? 'fast-food' : 'fast-food-outline';
+          } else if (route.name === 'Plan') {
+            iconName = focused ? 'list' : 'list-outline';
+          }
+
+          // Retorna el ícono adecuado para cada pestaña
+          return <Icon name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#D3A357', // Color activo
+        tabBarInactiveTintColor: 'gray', // Color inactivo
+        tabBarStyle: {
+          backgroundColor: '#1c1c1e', // Fondo del tab
+          borderTopColor: 'transparent',
+          height: 60,
+          paddingBottom: 5,
+          paddingTop: 5,
+        },
+        headerShown: false, // Ocultar el header
+      })}
+    >
+      <Tab.Screen 
         name="Inicio" 
-        component={Home}
-        initialParams={data}
-        options={{ headerShown: false }}/>
-        <Tab.Screen 
+        component={Home} 
+        initialParams={data} 
+      />
+      <Tab.Screen 
         name="Recetas" 
         component={Recipes} 
-        options={{ headerShown: false }}/>
-        <Tab.Screen 
+      />
+      <Tab.Screen 
         name="Plan" 
-        component={Plan}
-        initialParams={data}
-        options={{ headerShown: false }}/>
-      </Tab.Navigator>
-    );
+        component={Plan} 
+        initialParams={data} 
+      />
+    </Tab.Navigator>
+  );
 }
