@@ -1,111 +1,140 @@
-import React from 'react';
-import { Top } from "./Top";
-import { 
-    View, 
-    SafeAreaView,
-    StyleSheet,
-    Dimensions,
-    Text,
-    ScrollView
-    } from "react-native";
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, StyleSheet, SafeAreaView } from 'react-native';
+import { Top } from './Top';
+import { collection, getDocs } from 'firebase/firestore';
+import { dataBase } from '../Database/Firebase';
 
-export function Home({route}){
-    const data = route.params;
-    return(
-        <SafeAreaView>
-            <Top page={'Inicio'}/>
+export function Home({ route }) {
+    const dt = route.params || {};  // Asegura que route.params no sea undefined
+    const [tips, setTips] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
+
+    useEffect(() => {
+        const fetchTips = async () => {
+            console.log("Fetching tips from Firestore...");  // Log antes de la petición
+            try {
+                const querySnapshot = await getDocs(collection(dataBase, 'Tip'));
+                console.log('Firestore response:', querySnapshot);  // Log de la respuesta completa
+
+                // Verifica si hay documentos recuperados
+                if (querySnapshot.empty) {
+                    console.warn('No tips found in Firestore');  // Si no hay datos
+                }
+
+                const tipsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                console.log('Mapped tips data:', tipsData);  // Log de los datos mapeados
+
+                setTips(tipsData);
+                setLoading(false);
+            } catch (e) {
+                console.error('Error fetching tips:', e);  // Log del error capturado
+                setError(true);
+                setLoading(false);
+            }
+        };
+
+        fetchTips();
+    }, []);
+
+    const renderTip = ({ item }) => (
+        <View style={styles.tipItem}>
+            <Text style={styles.titleTip}>{item.Title || 'Título del Tip'}</Text>
+            <Text style={styles.contentTip}>{item.Content || 'Contenido del tip'}</Text>
+        </View>
+    );
+
+    if (loading) {
+        console.log('Loading tips...');  // Log del estado de carga
+        return <Text style={styles.loadingText}>Cargando...</Text>;
+    }
+
+    if (error) {
+        console.log('Error state triggered');  // Log cuando ocurre un error
+        return <Text style={styles.errorText}>Error al cargar los tips. Intenta nuevamente más tarde.</Text>;
+    }
+
+    console.log('Rendering tips:', tips);  // Log de los datos a renderizar
+
+    return (
+        <SafeAreaView style={styles.area}>
+            <Top page={'Inicio'} />
             <View style={styles.Circles}>
-                <View style={[styles.CircleGold, styles.CircleOverlapGold, styles.BoxShadow]}></View>
-                <View style={[styles.CircleBlue, styles.CircleOverlapBlue, styles.BoxShadow]}></View>
                 <View style={styles.ViewText}>
-                    <Text style={{
-                        color: '#FFFFFF', 
-                        textAlign:'center', 
-                        fontSize: 26,
-                        textShadowColor: '#000000',
-                        textShadowOffset: { width: 1, height: 3 },
-                        textShadowRadius: 3,}}>
-                        !Hola¡{'\n'}{data.Name}{'\n'}¿Listo para inicar?
+                    <Text style={styles.GreetingText}>
+                        {dt.Name || 'Usuario'}, ¿Listo para iniciar? {/* Previene que Name sea undefined */}
                     </Text>
                 </View>
             </View>
-            <View style={styles.TipBox}>
-                <ScrollView>
-                <Text style={styles.TitleTip}>Titulo del Tip #</Text>
-                <Text style={styles.ContentTip}>Contenido del Tip</Text>
-                </ScrollView>
-            </View>
+            <FlatList
+                data={tips}
+                renderItem={renderTip}
+                keyExtractor={item => item.id}
+                style={styles.tipList}
+            />
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    Circles:{
-        alignSelf: 'center',
-        flexDirection: 'row',
-        marginTop: 15,
+    area: {
         flex: 1,
-    }, 
-    CircleGold:{
-        height: Dimensions.get('window').height * 0.22,
-        width: Dimensions.get('window').height * 0.22,
-        borderRadius: Math.round((Dimensions.get('window').height + Dimensions.get('window').width) / 2),
-        backgroundColor: '#D3A357',
-        shadowColor: "black",
-        shadowOffset: {
-          width: 6,
-          height: 6,
-        },
+        backgroundColor: '#000',
+        paddingHorizontal: 20,
+        paddingTop: 20,
+    },
+    Circles: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 20,
+    },
+    GreetingText: {
+        color: '#FFF',
+        textAlign: 'center',
+        fontSize: 24,
+        fontWeight: '600',
+        marginVertical: 20,
+        textShadowColor: '#000',
+        textShadowOffset: { width: 1, height: 2 },
+        textShadowRadius: 3,
+    },
+    tipList: {
+        marginTop: 20,
+    },
+    tipItem: {
+        marginBottom: 20,
+        backgroundColor: '#333',
+        borderRadius: 12,
+        padding: 15,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.5,
-        shadowRadius: 4,
-        elevation: 16,
+        shadowRadius: 4.65,
+        elevation: 8,
     },
-    CircleBlue:{
-        height: Dimensions.get('window').height * 0.22,
-        width: Dimensions.get('window').height * 0.22,
-        borderRadius: Math.round((Dimensions.get('window').height + Dimensions.get('window').width) / 2),
-        backgroundColor: '#01273C',
-
-    },
-    BoxShadow:{
-        shadowColor: "black",
-        shadowOffset: {
-          width: 6,
-          height: 6,
-        },
-        shadowOpacity: 1,
-        shadowRadius: 4,
-        elevation: 20,        
-    },
-    CircleOverlapBlue: {
-        position: 'absolute',
-        left: -Dimensions.get('window').height * 0.045,
-    },
-    CircleOverlapGold:{
-        position: 'absolute',
-        right: -Dimensions.get('window').height * 0.045,
-    },
-    ViewText:{
-        position: 'absolute',
-        bottom: -Dimensions.get('window').height * 0.16,
-        right: -Dimensions.get('window').height * 0.13
-    },
-    TipBox: {
-        alignSelf: 'center',
-        height: 400,
-        width: 313,
-        borderWidth: 2,
-        borderRadius: 8,
-        marginTop: Dimensions.get('window').height*0.25
-    },
-    TitleTip: {
+    titleTip: {
+        fontSize: 20,
+        fontWeight: 'bold',
         color: '#D3A357',
         textAlign: 'center',
-        fontSize: 32,
-        fontWeight: 'bold'
+        marginBottom: 10,
     },
-    ContentTip:{
+    contentTip: {
+        fontSize: 18,
+        color: '#FFF',
         textAlign: 'center',
-        fontSize: 20
-    }
-})
+    },
+    loadingText: {
+        marginTop: 50,
+        textAlign: 'center',
+        fontSize: 24,
+        color: '#FFFFFF',
+    },
+    errorText: {
+        marginTop: 50,
+        textAlign: 'center',
+        fontSize: 20,
+        color: 'red',
+    },
+});
