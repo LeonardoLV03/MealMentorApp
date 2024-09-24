@@ -1,5 +1,5 @@
 import Constants from 'expo-constants';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { dataBase } from '../Database/Firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { SHA256, enc } from 'crypto-js';
@@ -14,10 +14,66 @@ import {
   Pressable,
   Alert,
   Modal,
-  TextInput
-} from "react-native";
+  TextInput,
+} from 'react-native';
 
 const { width, height } = Dimensions.get('window');
+
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#000' },
+  topLogin: { marginTop: Constants.statusBarHeight, padding: 20, alignItems: 'center' },
+  title: { fontSize: 32, color: '#fff', fontWeight: 'bold', textAlign: 'center' },
+  logoImage: {
+    position: 'absolute',
+    right: -(width * 0.1),
+    top: 0,
+    height: height * 0.95,
+    width: width * 1.2,
+    resizeMode: 'contain',
+  },
+  viewInputsLogin: { position: 'absolute', bottom: 5, width: '100%', alignItems: 'center' },
+  viewButtonLogin: {
+    width: width * 0.8,
+    height: 50,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
+  },
+  buttonText: { color: '#000', fontSize: 20, fontWeight: 'bold' },
+  newAccountText: { color: '#fff', fontSize: 16, textDecorationLine: 'underline' },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalView: {
+    width: '90%',
+    backgroundColor: '#333',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalIcon: { width: 60, height: 60, marginBottom: 20 },
+  modalTitle: { fontSize: 22, color: '#fff', marginBottom: 20, textAlign: 'center' },
+  input: {
+    width: '100%',
+    height: 50,
+    backgroundColor: '#444',
+    borderRadius: 10,
+    paddingLeft: 10,
+    color: '#fff',
+    marginBottom: 20,
+  },
+  continueText: { color: '#000', fontSize: 18, fontWeight: 'bold' },
+});
 
 export function Login() {
   const [user, setUser] = useState('');
@@ -26,7 +82,7 @@ export function Login() {
   const [modalVisible, setModalVisible] = useState(false);
   const navigation = useNavigation();
 
-  const handleLogin = async () => {
+  const handleLogin = useCallback(async () => {
     try {
       const usersRef = collection(dataBase, 'Customers');
       const q = query(usersRef, where('UserName', '==', user));
@@ -36,19 +92,23 @@ export function Login() {
         const userData = querySnapshot.docs[0].data();
         const passHash = SHA256(pass + userData.Salt).toString(enc.Hex);
 
-        passHash === userData.Password
-          ? navigation.navigate('tabs', userData)
-          : setError('Contraseña incorrecta');
+        if (passHash === userData.Password) {
+          navigation.navigate('tabs', userData);
+        } else {
+          setError('Contraseña incorrecta');
+        }
       } else {
         setError('Usuario o contraseña incorrectos');
       }
     } catch (error) {
+      console.error('Login failed:', error.message);
       setError('Ha ocurrido un error. Inténtalo más tarde.');
-      console.error('Login failed:', error);
     }
-  };
+  }, [user, pass, navigation]);
 
-  const handleMoveToNewCustomer = () => Alert.alert('Visita a tu nutriólogo/a');
+  const handleMoveToNewCustomer = useCallback(() => {
+    Alert.alert('Visita a tu nutriólogo/a');
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -67,7 +127,7 @@ export function Login() {
           onPress={() => setModalVisible(true)}
           style={({ pressed }) => [
             styles.viewButtonLogin,
-            { backgroundColor: pressed ? '#defcf280' : '#defcf2' }
+            { backgroundColor: pressed ? '#defcf280' : '#defcf2' },
           ]}
         >
           <Text style={styles.buttonText}>Comenzar</Text>
@@ -80,7 +140,7 @@ export function Login() {
 
       <Modal
         animationType="slide"
-        transparent={true}
+        transparent
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
@@ -112,7 +172,7 @@ export function Login() {
               onPress={handleLogin}
               style={({ pressed }) => [
                 styles.viewButtonLogin,
-                { backgroundColor: pressed ? '#defcf280' : '#defcf2' }
+                { backgroundColor: pressed ? '#defcf280' : '#defcf2' },
               ]}
             >
               <Text style={styles.continueText}>Continuar</Text>
@@ -123,96 +183,3 @@ export function Login() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000'
-  },
-  topLogin: {
-    marginTop: Constants.statusBarHeight,
-    padding: 20,
-    alignItems: 'center'
-  },
-  title: {
-    fontSize: 32,
-    color: '#fff',
-    fontWeight: 'bold',
-    textAlign: 'center'
-  },
-  logoImage: {
-    position: 'absolute',
-    right: -(width * 0.1),
-    top: 0,
-    height: height * 0.95,
-    width: width * 1.2,
-    resizeMode: 'contain'
-  },
-  viewInputsLogin: {
-    position: 'absolute',
-    bottom: 5,
-    width: '100%',
-    alignItems: 'center'
-  },
-  viewButtonLogin: {
-    width: width * 0.8,
-    height: 50,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginVertical: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 8
-  },
-  buttonText: {
-    color: '#000',
-    fontSize: 20,
-    fontWeight: 'bold'
-  },
-  newAccountText: {
-    color: '#fff',
-    fontSize: 16,
-    textDecorationLine: 'underline'
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)'
-  },
-  modalView: {
-    width: '90%',
-    backgroundColor: '#333',
-    borderRadius: 10,
-    padding: 20,
-    alignItems: 'center'
-  },
-  modalIcon: {
-    width: 60,
-    height: 60,
-    marginBottom: 20
-  },
-  modalTitle: {
-    fontSize: 22,
-    color: '#fff',
-    marginBottom: 20,
-    textAlign: 'center'
-  },
-  input: {
-    width: '100%',
-    height: 50,
-    backgroundColor: '#444',
-    borderRadius: 10,
-    paddingLeft: 10,
-    color: '#fff',
-    marginBottom: 20
-  },
-  continueText: {
-    color: '#000',
-    fontSize: 18,
-    fontWeight: 'bold'
-  }
-});

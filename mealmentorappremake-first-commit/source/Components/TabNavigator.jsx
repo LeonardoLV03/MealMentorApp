@@ -24,19 +24,19 @@ export function Tabs({ route }) {
             iconName = focused ? 'list' : 'list-outline';
           }
 
-          // Retorna el ícono adecuado para cada pestaña
+
           return <Icon name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#D3A357', // Color activo
-        tabBarInactiveTintColor: 'gray', // Color inactivo
+        tabBarActiveTintColor: '#D3A357', 
+        tabBarInactiveTintColor: 'gray', 
         tabBarStyle: {
-          backgroundColor: '#1c1c1e', // Fondo del tab
+          backgroundColor: '#1c1c1e', 
           borderTopColor: 'transparent',
           height: 60,
           paddingBottom: 5,
           paddingTop: 5,
         },
-        headerShown: false, // Ocultar el header
+        headerShown: false, 
       })}
     >
       <Tab.Screen 
