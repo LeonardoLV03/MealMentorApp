@@ -2,7 +2,6 @@ import Constants from 'expo-constants';
 import { useState, useCallback } from 'react';
 import { dataBase } from '../Database/Firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { SHA256, enc } from 'crypto-js';
 import { useNavigation } from '@react-navigation/native';
 import {
   View,
@@ -18,7 +17,6 @@ import {
 } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
-
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
@@ -73,6 +71,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   continueText: { color: '#000', fontSize: 18, fontWeight: 'bold' },
+  forgotPasswordText: { color: '#fff', fontSize: 16, textDecorationLine: 'underline' },
+  closeModalText: { color: '#fff', fontSize: 16, marginTop: 20, textDecorationLine: 'underline' },
 });
 
 export function Login() {
@@ -80,6 +80,8 @@ export function Login() {
   const [pass, setPass] = useState('');
   const [error, setError] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+  const [forgotModalVisible, setForgotModalVisible] = useState(false);
+  const [recoveredPassword, setRecoveredPassword] = useState('');
   const navigation = useNavigation();
 
   const handleLogin = useCallback(async () => {
@@ -90,9 +92,7 @@ export function Login() {
 
       if (!querySnapshot.empty) {
         const userData = querySnapshot.docs[0].data();
-        const passHash = SHA256(pass + userData.Salt).toString(enc.Hex);
-
-        if (passHash === userData.Password) {
+        if (userData.Password === pass) {
           navigation.navigate('tabs', userData);
         } else {
           setError('Contraseña incorrecta');
@@ -105,6 +105,24 @@ export function Login() {
       setError('Ha ocurrido un error. Inténtalo más tarde.');
     }
   }, [user, pass, navigation]);
+
+  const handlePasswordRecovery = useCallback(async () => {
+    try {
+      const usersRef = collection(dataBase, 'Customers');
+      const q = query(usersRef, where('UserName', '==', user));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const userData = querySnapshot.docs[0].data();
+        setRecoveredPassword(userData.Password); // Mostrar contraseña sin hashear
+      } else {
+        Alert.alert('Usuario no encontrado');
+      }
+    } catch (error) {
+      console.error('Error al recuperar la contraseña:', error.message);
+      Alert.alert('Error al recuperar la contraseña. Inténtalo más tarde.');
+    }
+  }, [user]);
 
   const handleMoveToNewCustomer = useCallback(() => {
     Alert.alert('Visita a tu nutriólogo/a');
@@ -138,6 +156,7 @@ export function Login() {
         </Text>
       </View>
 
+      {/* Modal de inicio de sesión */}
       <Modal
         animationType="slide"
         transparent
@@ -177,6 +196,54 @@ export function Login() {
             >
               <Text style={styles.continueText}>Continuar</Text>
             </Pressable>
+            <Text style={styles.forgotPasswordText} onPress={() => setForgotModalVisible(true)}>
+              ¿Olvidaste tu contraseña?
+            </Text>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de recuperación de contraseña */}
+      <Modal
+        animationType="slide"
+        transparent
+        visible={forgotModalVisible}
+        onRequestClose={() => setForgotModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalView}>
+            <Image
+              source={require('../../assets/correo.png')}
+              style={styles.modalIcon}
+            />
+            <Text style={styles.modalTitle}>Recuperar Contraseña</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Usuario"
+              placeholderTextColor="#888"
+              value={user}
+              onChangeText={setUser}
+            />
+            <Pressable
+              onPress={handlePasswordRecovery}
+              style={({ pressed }) => [
+                styles.viewButtonLogin,
+                { backgroundColor: pressed ? '#defcf280' : '#defcf2' },
+              ]}
+            >
+              <Text style={styles.continueText}>Recuperar</Text>
+            </Pressable>
+            {recoveredPassword && (
+              <Text style={{ color: 'green', marginTop: 20 }}>
+                Tu contraseña es: {recoveredPassword}
+              </Text>
+            )}
+            <Text
+              style={styles.closeModalText}
+              onPress={() => setForgotModalVisible(false)}
+            >
+              Cerrar
+            </Text>
           </View>
         </View>
       </Modal>
