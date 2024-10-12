@@ -24,7 +24,6 @@ export function Tabs({ route }) {
             iconName = focused ? 'list' : 'list-outline';
           }
 
-
           return <Icon name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#D3A357', 

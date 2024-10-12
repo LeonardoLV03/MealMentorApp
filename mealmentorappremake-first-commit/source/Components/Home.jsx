@@ -5,30 +5,29 @@ import { collection, getDocs } from 'firebase/firestore';
 import { dataBase } from '../Database/Firebase';
 
 export function Home({ route }) {
-    const dt = route.params || {};  // Asegura que route.params no sea undefined
+    const dt = route.params || {};  
     const [tips, setTips] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
 
     useEffect(() => {
         const fetchTips = async () => {
-            console.log("Fetching tips from Firestore...");  // Log antes de la petición
+            console.log("Fetching tips from Firestore...");  
             try {
                 const querySnapshot = await getDocs(collection(dataBase, 'Tip'));
-                console.log('Firestore response:', querySnapshot);  // Log de la respuesta completa
+                console.log('Firestore response:', querySnapshot);  
 
-                // Verifica si hay documentos recuperados
                 if (querySnapshot.empty) {
-                    console.warn('No tips found in Firestore');  // Si no hay datos
+                    console.warn('No tips found in Firestore');  
                 }
 
                 const tipsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                console.log('Mapped tips data:', tipsData);  // Log de los datos mapeados
+                console.log('Mapped tips data:', tipsData);  
 
                 setTips(tipsData);
                 setLoading(false);
             } catch (e) {
-                console.error('Error fetching tips:', e);  // Log del error capturado
+                console.error('Error fetching tips:', e);  
                 setError(true);
                 setLoading(false);
             }
@@ -45,16 +44,16 @@ export function Home({ route }) {
     );
 
     if (loading) {
-        console.log('Loading tips...');  // Log del estado de carga
+        console.log('Loading tips...');  
         return <Text style={styles.loadingText}>Cargando...</Text>;
     }
 
     if (error) {
-        console.log('Error state triggered');  // Log cuando ocurre un error
+        console.log('Error state triggered'); 
         return <Text style={styles.errorText}>Error al cargar los tips. Intenta nuevamente más tarde.</Text>;
     }
 
-    console.log('Rendering tips:', tips);  // Log de los datos a renderizar
+    console.log('Rendering tips:', tips);  
 
     return (
         <SafeAreaView style={styles.area}>
@@ -62,7 +61,7 @@ export function Home({ route }) {
             <View style={styles.Circles}>
                 <View style={styles.ViewText}>
                     <Text style={styles.GreetingText}>
-                        {dt.Name || 'Usuario'}, ¿Listo para iniciar? {/* Previene que Name sea undefined */}
+                        {dt.Name || 'Usuario'}, ¿Listo para iniciar? {}
                     </Text>
                 </View>
             </View>
