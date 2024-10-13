@@ -4,6 +4,7 @@ import { Calendar } from "react-native-calendars";
 import { Top } from "./Top";
 import { useDoc } from "../Hooks/useDoc";
 import { dataBase } from "../Database/Firebase";
+import { updateDoc, doc, arrayUnion, getDoc } from "firebase/firestore";
 
 export function Plan({ route }) {
     const [loading, setLoading] = useState(true);
@@ -15,25 +16,47 @@ export function Plan({ route }) {
     const { data } = useDoc(dataBase, "Plan", customer.plan_ID, setLoading);
 
     useEffect(() => {
-        if (!loading) {
-            const newMarkedDates = {};
-            const allDates = generateAllDates(new Date(data.startDate), new Date('2025-09-30'));
+        const fetchTrackerData = async () => {
+            // Obtener las fechas registradas en el documento Trackers
+            const trackerRef = doc(dataBase, "Trackers", customer.fitTracker_ID);
+            const trackerSnap = await getDoc(trackerRef);
+            const trackerData = trackerSnap.data();
 
-            allDates.forEach((date) => {
-                // Marcar todos los días con puntos blancos inicialmente
-                newMarkedDates[date] = { marked: true, dotColor: "#FFFFFF" }; // Puntos blancos
-            });
+            if (!loading) {
+                const newMarkedDates = {};
+                const allDates = generateAllDates(new Date(data.startDate), new Date('2025-09-30'));
 
-            // Marcar los días con recetas
-            if (data?.content) {
-                data.content.forEach((_, index) => {
-                    const date = getDateByIndex(index);
-                    newMarkedDates[date] = { marked: true, dotColor: "#D3A357" }; // Puntos dorados
+                allDates.forEach((date) => {
+                    // Marcar todos los días con puntos blancos inicialmente
+                    newMarkedDates[date] = { marked: true, dotColor: "#FFFFFF" };
                 });
-            }
 
-            setMarkedDates(newMarkedDates);
-        }
+                // Marcar los días con recetas
+                if (data?.content) {
+                    data.content.forEach((_, index) => {
+                        const date = getDateByIndex(index);
+                        newMarkedDates[date] = { marked: true, dotColor: "#D3A357" }; // Puntos dorados
+                    });
+                }
+
+                // Marcar los días donde ya se hizo ejercicio (fechas guardadas en Trackers)
+                if (trackerData?.Fecha) {
+                    trackerData.Fecha.forEach((trackedDate) => {
+                        if (newMarkedDates[trackedDate]) {
+                            newMarkedDates[trackedDate] = {
+                                ...newMarkedDates[trackedDate],
+                                dotColor: "green", // Cambiar el color del punto a verde
+                                exerciseDone: true, // Indicar que ya se realizó el ejercicio
+                            };
+                        }
+                    });
+                }
+
+                setMarkedDates(newMarkedDates);
+            }
+        };
+
+        fetchTrackerData();
     }, [loading, data]);
 
     const getDateByIndex = (index) => {
@@ -67,16 +90,29 @@ export function Plan({ route }) {
         setModalVisible(true);
     };
 
-    const handleExerciseDone = () => {
-        setMarkedDates((prev) => ({
-            ...prev,
-            [selectedDay.date]: {
-                ...prev[selectedDay.date],
-                dotColor: "green", // Cambiar a verde al hacer ejercicio
-                exerciseDone: true, // Registrar que se hizo ejercicio
-            },
-        }));
-        setModalVisible(false);
+    const handleExerciseDone = async () => {
+        try {
+            const trackerRef = doc(dataBase, "Trackers", customer.fitTracker_ID);
+            const currentDate = selectedDay.date;
+
+            await updateDoc(trackerRef, {
+                Fecha: arrayUnion(currentDate), // Agrega la fecha al arreglo sin duplicados
+            });
+
+            setMarkedDates((prev) => ({
+                ...prev,
+                [selectedDay.date]: {
+                    ...prev[selectedDay.date],
+                    dotColor: "green", // Cambiar el color del punto a verde
+                    exerciseDone: true, // Marcar como ejercicio hecho
+                },
+            }));
+
+            setModalVisible(false);
+        } catch (error) {
+            console.error("Error actualizando el documento de Tracker: ", error);
+            Alert.alert("Error", "No se pudo actualizar el estado de ejercicio.");
+        }
     };
 
     if (loading) {
