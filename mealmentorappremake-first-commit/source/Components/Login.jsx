@@ -1,8 +1,7 @@
 import Constants from 'expo-constants';
 import { useState, useCallback } from 'react';
-import { dataBase } from '../Database/Firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { SHA256, enc } from 'crypto-js';
+import { auth } from '../Database/Firebase'; // Importar Firebase Auth
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth'; // Métodos de inicio de sesión y restablecimiento de contraseña
 import { useNavigation } from '@react-navigation/native';
 import {
   View,
@@ -18,7 +17,6 @@ import {
 } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
-
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
@@ -76,39 +74,40 @@ const styles = StyleSheet.create({
 });
 
 export function Login() {
-  const [user, setUser] = useState('');
-  const [pass, setPass] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+  const [resetModalVisible, setResetModalVisible] = useState(false); // Estado para el modal de restablecimiento
   const navigation = useNavigation();
 
   const handleLogin = useCallback(async () => {
     try {
-      const usersRef = collection(dataBase, 'Customers');
-      const q = query(usersRef, where('UserName', '==', user));
-      const querySnapshot = await getDocs(q);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-      if (!querySnapshot.empty) {
-        const userData = querySnapshot.docs[0].data();
-        const passHash = SHA256(pass + userData.Salt).toString(enc.Hex);
-
-        if (passHash === userData.Password) {
-          navigation.navigate('tabs', userData);
-        } else {
-          setError('Contraseña incorrecta');
-        }
-      } else {
-        setError('Usuario o contraseña incorrectos');
-      }
+      // Redirigir a la pantalla principal con los datos del usuario
+      navigation.navigate('tabs', user);
     } catch (error) {
+      setError('Usuario o contraseña incorrectos');
       console.error('Login failed:', error.message);
-      setError('Ha ocurrido un error. Inténtalo más tarde.');
     }
-  }, [user, pass, navigation]);
+  }, [email, password, navigation]);
 
   const handleMoveToNewCustomer = useCallback(() => {
     Alert.alert('Visita a tu nutriólogo/a');
   }, []);
+
+  const handleResetPassword = async () => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      Alert.alert('Éxito', 'Se ha enviado un enlace de restablecimiento de contraseña a tu correo electrónico.');
+      setResetModalVisible(false); // Cerrar el modal
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo enviar el enlace de restablecimiento. Asegúrate de que el correo esté registrado.');
+      console.error('Reset password failed:', error.message);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -136,6 +135,10 @@ export function Login() {
         <Text style={styles.newAccountText} onPress={handleMoveToNewCustomer}>
           ¿No Tienes Cuenta?
         </Text>
+
+        <Text style={styles.newAccountText} onPress={() => setResetModalVisible(true)}>
+          ¿Olvidaste tu contraseña?
+        </Text>
       </View>
 
       <Modal
@@ -150,13 +153,13 @@ export function Login() {
               source={require('../../assets/correo.png')}
               style={styles.modalIcon}
             />
-            <Text style={styles.modalTitle}>¿Cuál es tu usuario?</Text>
+            <Text style={styles.modalTitle}>Correo Electrónico</Text>
             <TextInput
               style={styles.input}
-              placeholder="Usuario"
+              placeholder="Correo"
               placeholderTextColor="#888"
-              value={user}
-              onChangeText={setUser}
+              value={email}
+              onChangeText={setEmail}
             />
             <Text style={styles.modalTitle}>Contraseña</Text>
             <TextInput
@@ -164,8 +167,8 @@ export function Login() {
               placeholder="Contraseña"
               placeholderTextColor="#888"
               secureTextEntry
-              value={pass}
-              onChangeText={setPass}
+              value={password}
+              onChangeText={setPassword}
             />
             {error && <Text style={{ color: 'red' }}>{error}</Text>}
             <Pressable
@@ -176,6 +179,44 @@ export function Login() {
               ]}
             >
               <Text style={styles.continueText}>Continuar</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        animationType="slide"
+        transparent
+        visible={resetModalVisible}
+        onRequestClose={() => setResetModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalTitle}>Restablecer Contraseña</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Correo Electrónico"
+              placeholderTextColor="#888"
+              value={email}
+              onChangeText={setEmail}
+            />
+            <Pressable
+              onPress={handleResetPassword}
+              style={({ pressed }) => [
+                styles.viewButtonLogin,
+                { backgroundColor: pressed ? '#defcf280' : '#defcf2' },
+              ]}
+            >
+              <Text style={styles.continueText}>Enviar Enlace de Restablecimiento</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setResetModalVisible(false)}
+              style={({ pressed }) => [
+                styles.viewButtonLogin,
+                { backgroundColor: pressed ? '#defcf280' : '#defcf2' },
+              ]}
+            >
+              <Text style={styles.continueText}>Cancelar</Text>
             </Pressable>
           </View>
         </View>

@@ -13,6 +13,10 @@ export function Plan({ route }) {
     const [markedDates, setMarkedDates] = useState({});
     const customer = route.params;
 
+
+///Arreglar busqueda de plan.
+
+
     const { data } = useDoc(dataBase, "Plan", customer.plan_ID, setLoading);
 
     useEffect(() => {
