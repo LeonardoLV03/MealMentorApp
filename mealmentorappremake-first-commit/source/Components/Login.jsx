@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 import { useState, useCallback } from 'react';
-import { auth } from '../Database/Firebase'; // Importar Firebase Auth
+import { auth, dataBase } from '../Database/Firebase'; // Importar Firebase Auth
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth'; // Métodos de inicio de sesión y restablecimiento de contraseña
 import { useNavigation } from '@react-navigation/native';
 import {
@@ -15,6 +15,7 @@ import {
   Modal,
   TextInput,
 } from 'react-native';
+import { getDocs, collection, query, where } from 'firebase/firestore';
 
 const { width, height } = Dimensions.get('window');
 
@@ -83,14 +84,27 @@ export function Login() {
 
   const handleLogin = useCallback(async () => {
     try {
+      // Iniciar sesión con Firebase Authentication
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // Redirigir a la pantalla principal con los datos del usuario
-      navigation.navigate('tabs', user);
+      const user = userCredential.user; // Aquí obtienes el UID del usuario
+  
+      // Ahora, consulta en Firestore para obtener los datos adicionales
+      const usuariosRef = collection(dataBase, "Customers");
+      const q = query(usuariosRef, where("email", "==", email)); // O puedes usar user.uid si lo guardas en Firestore
+      const usuariosSnapshot = await getDocs(q);
+  
+      if (!usuariosSnapshot.empty) {
+        const usuariosData = usuariosSnapshot.docs[0].data(); // Datos del usuario en Firestore
+        console.log("Datos del usuario desde Firestore", usuariosData);
+  
+        // Redirigir a la pantalla principal con los datos del usuario
+        navigation.navigate('tabs', { data: usuariosData });
+      } else {
+        setError('No se encontraron datos para este usuario');
+      }
     } catch (error) {
       setError('Usuario o contraseña incorrectos');
-      console.error('Login failed:', error.message);
+      console.error('Error en el login:', error.message);
     }
   }, [email, password, navigation]);
 
