@@ -3,6 +3,7 @@ import { View, Text, FlatList, StyleSheet, SafeAreaView } from 'react-native';
 import { Top } from './Top';
 import { collection, getDocs } from 'firebase/firestore';
 import { dataBase } from '../Database/Firebase';
+import { useTheme } from '../../ThemeContext';  // Importa el contexto de tema claro o oscuro
 
 export function Home({ route }) {
     const dt = route.params || {};  
@@ -10,24 +11,16 @@ export function Home({ route }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
 
+    const { isDarkTheme } = useTheme();  // Obtén el valor del tema
+
     useEffect(() => {
         const fetchTips = async () => {
-            console.log("Fetching tips from Firestore...");  
             try {
                 const querySnapshot = await getDocs(collection(dataBase, 'Tip'));
-                console.log('Firestore response:', querySnapshot);  
-
-                if (querySnapshot.empty) {
-                    console.warn('No tips found in Firestore');  
-                }
-
                 const tipsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                console.log('Mapped tips data:', tipsData);  
-
                 setTips(tipsData);
                 setLoading(false);
             } catch (e) {
-                console.error('Error fetching tips:', e);  
                 setError(true);
                 setLoading(false);
             }
@@ -37,33 +30,24 @@ export function Home({ route }) {
     }, []);
 
     const renderTip = ({ item }) => (
-        <View style={styles.tipItem}>
+        <View style={[styles.tipItem, isDarkTheme ? styles.darkTipItem : styles.lightTipItem]}>
             <Text style={styles.titleTip}>{item.Title || 'Título del Tip'}</Text>
-            <Text style={styles.contentTip}>{item.Content || 'Contenido del tip'}</Text>
+            <Text style={[styles.contentTip, { color: isDarkTheme ? '#FFF' : '#000' }]}>
+                {item.Content || 'Contenido del tip'}
+            </Text>
         </View>
     );
 
-    if (loading) {
-        console.log('Loading tips...');  
-        return <Text style={styles.loadingText}>Cargando...</Text>;
-    }
-
-    if (error) {
-        console.log('Error state triggered'); 
-        return <Text style={styles.errorText}>Error al cargar los tips. Intenta nuevamente más tarde.</Text>;
-    }
-
-    console.log('Rendering tips:', tips);  
+    if (loading) return <Text style={styles.loadingText}>Cargando...</Text>;
+    if (error) return <Text style={styles.errorText}>Error al cargar los tips. Intenta nuevamente más tarde.</Text>;
 
     return (
-        <SafeAreaView style={styles.area}>
+        <SafeAreaView style={[styles.area, { backgroundColor: isDarkTheme ? '#000' : '#FFF' }]}>
             <Top page={'Inicio'} />
             <View style={styles.Circles}>
-                <View style={styles.ViewText}>
-                    <Text style={styles.GreetingText}>
-                        {dt.Name || 'Usuario'}, ¿Listo para iniciar? {}
-                    </Text>
-                </View>
+                <Text style={[styles.GreetingText, { color: isDarkTheme ? '#FFF' : '#000' }]}>
+                    {dt.Name || 'Usuario'}, ¿Listo para iniciar? 
+                </Text>
             </View>
             <FlatList
                 data={tips}
@@ -78,7 +62,6 @@ export function Home({ route }) {
 const styles = StyleSheet.create({
     area: {
         flex: 1,
-        backgroundColor: '#000',
         paddingHorizontal: 20,
         paddingTop: 20,
     },
@@ -88,7 +71,6 @@ const styles = StyleSheet.create({
         marginTop: 20,
     },
     GreetingText: {
-        color: '#FFF',
         textAlign: 'center',
         fontSize: 24,
         fontWeight: '600',
@@ -102,7 +84,6 @@ const styles = StyleSheet.create({
     },
     tipItem: {
         marginBottom: 20,
-        backgroundColor: '#333',
         borderRadius: 12,
         padding: 15,
         alignItems: 'center',
@@ -111,6 +92,12 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.5,
         shadowRadius: 4.65,
         elevation: 8,
+    },
+    darkTipItem: {
+        backgroundColor: '#333',
+    },
+    lightTipItem: {
+        backgroundColor: '#DDD',
     },
     titleTip: {
         fontSize: 20,
@@ -121,8 +108,6 @@ const styles = StyleSheet.create({
     },
     contentTip: {
         fontSize: 18,
-        color: '#FFF',
-        textAlign: 'center',
     },
     loadingText: {
         marginTop: 50,

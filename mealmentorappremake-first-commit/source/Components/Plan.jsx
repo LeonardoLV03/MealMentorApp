@@ -5,6 +5,7 @@ import { Top } from "./Top";
 import { useDoc } from "../Hooks/useDoc";
 import { dataBase } from "../Database/Firebase";
 import { updateDoc, doc, arrayUnion, getDoc } from "firebase/firestore";
+import { useTheme } from "../../ThemeContext"; // Importa el contexto de tema
 
 export function Plan({ route }) {
     const [loading, setLoading] = useState(true);
@@ -12,16 +13,12 @@ export function Plan({ route }) {
     const [modalVisible, setModalVisible] = useState(false);
     const [markedDates, setMarkedDates] = useState({});
     const customer = route.params;
-
-
-///Arreglar busqueda de plan.
-
+    const { isDarkTheme } = useTheme(); // Obtén el valor del tema
 
     const { data } = useDoc(dataBase, "Plan", customer.plan_ID, setLoading);
 
     useEffect(() => {
         const fetchTrackerData = async () => {
-            // Obtener las fechas registradas en el documento Trackers
             const trackerRef = doc(dataBase, "Trackers", customer.fitTracker_ID);
             const trackerSnap = await getDoc(trackerRef);
             const trackerData = trackerSnap.data();
@@ -31,26 +28,23 @@ export function Plan({ route }) {
                 const allDates = generateAllDates(new Date(data.startDate), new Date('2025-09-30'));
 
                 allDates.forEach((date) => {
-                    // Marcar todos los días con puntos blancos inicialmente
                     newMarkedDates[date] = { marked: true, dotColor: "#FFFFFF" };
                 });
 
-                // Marcar los días con recetas
                 if (data?.content) {
                     data.content.forEach((_, index) => {
                         const date = getDateByIndex(index);
-                        newMarkedDates[date] = { marked: true, dotColor: "#D3A357" }; // Puntos dorados
+                        newMarkedDates[date] = { marked: true, dotColor: "#D3A357" };
                     });
                 }
 
-                // Marcar los días donde ya se hizo ejercicio (fechas guardadas en Trackers)
                 if (trackerData?.Fecha) {
                     trackerData.Fecha.forEach((trackedDate) => {
                         if (newMarkedDates[trackedDate]) {
                             newMarkedDates[trackedDate] = {
                                 ...newMarkedDates[trackedDate],
-                                dotColor: "green", // Cambiar el color del punto a verde
-                                exerciseDone: true, // Indicar que ya se realizó el ejercicio
+                                dotColor: "green",
+                                exerciseDone: true,
                             };
                         }
                     });
@@ -81,9 +75,8 @@ export function Plan({ route }) {
 
     const handleDayPress = (day) => {
         const isExerciseDone = markedDates[day.dateString]?.exerciseDone;
-
-        // Obtener la receta o mostrar un mensaje genérico si no hay
-        const recipe = data.content?.[Object.keys(markedDates).indexOf(day.dateString)];
+        const dateIndex = Object.keys(markedDates).indexOf(day.dateString);
+        const recipe = dateIndex !== -1 ? data.content?.[dateIndex] : null;
 
         setSelectedDay({
             receta: recipe,
@@ -100,15 +93,15 @@ export function Plan({ route }) {
             const currentDate = selectedDay.date;
 
             await updateDoc(trackerRef, {
-                Fecha: arrayUnion(currentDate), // Agrega la fecha al arreglo sin duplicados
+                Fecha: arrayUnion(currentDate),
             });
 
             setMarkedDates((prev) => ({
                 ...prev,
                 [selectedDay.date]: {
                     ...prev[selectedDay.date],
-                    dotColor: "green", // Cambiar el color del punto a verde
-                    exerciseDone: true, // Marcar como ejercicio hecho
+                    dotColor: "green",
+                    exerciseDone: true,
                 },
             }));
 
@@ -122,15 +115,17 @@ export function Plan({ route }) {
     if (loading) {
         return (
             <View style={styles.centered}>
-                <Text style={styles.loadingText}>Cargando plan...</Text>
+                <Text style={[styles.loadingText, { color: isDarkTheme ? "#FFF" : "#000" }]}>
+                    Cargando plan...
+                </Text>
             </View>
         );
     }
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: isDarkTheme ? "#000" : "#FFF" }]}>
             <Top page={"Plan"} />
-            <View style={styles.infoContainer}>
+            <View style={[styles.infoContainer, { backgroundColor: isDarkTheme ? "#1E1E1E" : "#F0F0F0" }]}>
                 <InfoItem label="Calorías por día:" value={data.Calories} />
                 <InfoItem label="Objetivo:" value={customer.Goal} />
                 <InfoItem label="Inicio:" value={data.startDate} />
@@ -141,13 +136,13 @@ export function Plan({ route }) {
                 markedDates={markedDates}
                 onDayPress={handleDayPress}
                 theme={{
-                    backgroundColor: "#000",
-                    calendarBackground: "#000",
-                    dayTextColor: "#FFF",
+                    backgroundColor: isDarkTheme ? "#000" : "#FFF",
+                    calendarBackground: isDarkTheme ? "#000" : "#FFF",
+                    dayTextColor: isDarkTheme ? "#FFF" : "#000",
                     monthTextColor: "#D3A357",
                     arrowColor: "#D3A357",
                     todayTextColor: "#FF6347",
-                    selectedDayBackgroundColor: "#333",
+                    selectedDayBackgroundColor: isDarkTheme ? "#333" : "#CCC",
                     selectedDayTextColor: "#FFF",
                     dotColor: "#D3A357",
                     textDayFontWeight: "bold",
@@ -162,13 +157,12 @@ export function Plan({ route }) {
                 onRequestClose={() => setModalVisible(false)}
             >
                 <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
+                    <View style={[styles.modalContent, { backgroundColor: isDarkTheme ? "#1E1E1E" : "#FFF" }]}>
                         <Text style={styles.modalTitle}>Receta del Día</Text>
-                        <Text style={styles.modalText}>
+                        <Text style={[styles.modalText, { color: isDarkTheme ? "#FFF" : "#000" }]}>
                             {selectedDay?.receta || "No hay receta disponible"}
                         </Text>
 
-                        {/* Mostrar botón solo si no se ha registrado el ejercicio */}
                         {!selectedDay?.exerciseDone && (
                             <Pressable
                                 style={styles.exerciseButton}
@@ -203,7 +197,6 @@ const InfoItem = ({ label, value }) => (
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#000",
         paddingHorizontal: 20,
         paddingTop: 20,
     },
@@ -214,14 +207,12 @@ const styles = StyleSheet.create({
     },
     loadingText: {
         fontSize: 18,
-        color: "#D3A357",
     },
     infoContainer: {
         flexDirection: "row",
         justifyContent: "space-around",
         marginBottom: 20,
         padding: 10,
-        backgroundColor: "#1E1E1E",
         borderRadius: 10,
     },
     infoItem: {
@@ -233,7 +224,6 @@ const styles = StyleSheet.create({
         fontSize: 18,
     },
     normalText: {
-        color: "#FFF",
         fontSize: 16,
     },
     modalContainer: {
@@ -245,7 +235,6 @@ const styles = StyleSheet.create({
     modalContent: {
         width: "80%",
         padding: 20,
-        backgroundColor: "#1E1E1E",
         borderRadius: 10,
     },
     modalTitle: {
@@ -257,7 +246,6 @@ const styles = StyleSheet.create({
     },
     modalText: {
         fontSize: 18,
-        color: "#FFF",
         textAlign: "center",
     },
     exerciseButton: {
