@@ -8,7 +8,7 @@ import { Plan } from './Plan';
 const Tab = createBottomTabNavigator();
 
 export function Tabs({ route }) {
-  const {data} = route.params;
+  const data = route.params;
 
   return (
     <Tab.Navigator
