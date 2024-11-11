@@ -1,18 +1,16 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity } from "react-native";
-import { dataBase } from "../Database/Firebase";
-import { useDocs } from "../Hooks/useDocs";
-import { Top } from "./Top";
-import { ShowRecipeDialog } from "./DialogRecipe/ShowRecipeDialog";
-import { useTheme } from "../../ThemeContext"; // Importa el contexto de tema
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { dataBase } from '../Database/Firebase';
+import { useDocs } from '../Hooks/useDocs';
+import { Top } from './Top';
+import { ShowRecipeDialog } from './DialogRecipe/ShowRecipeDialog';
 
 export function Recipes() {
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
   const [error, setError] = useState(false);
 
-  const { data } = useDocs(dataBase, "Recipe", setLoading);
-  const { isDarkTheme } = useTheme(); // Obtén el valor del tema
+  const { data } = useDocs(dataBase, 'Recipe', setLoading);
 
   useEffect(() => {
     setError(!data || data.length === 0);
@@ -23,23 +21,23 @@ export function Recipes() {
   }, []);
 
   const renderItem = useCallback(
-    ({ item }) => <Item data={item} onPress={() => openDialog(item)} isDarkTheme={isDarkTheme} />,
-    [openDialog, isDarkTheme]
+    ({ item }) => <Item data={item} onPress={() => openDialog(item)} />,
+    [openDialog]
   );
 
   const keyExtractor = useCallback((item) => item.id.toString(), []);
 
   if (loading) {
-    return <Text style={[styles.loadingText, { color: isDarkTheme ? "#FFF" : "#000" }]}>Cargando...</Text>;
+    return <Text style={styles.loadingText}>Cargando...</Text>;
   }
 
   if (error) {
-    return <Text style={[styles.errorText, { color: isDarkTheme ? "red" : "darkred" }]}>Error al cargar las recetas. Intenta nuevamente más tarde.</Text>;
+    return <Text style={styles.errorText}>Error al cargar las recetas. Intenta nuevamente más tarde.</Text>;
   }
 
   return (
-    <View style={[styles.app, { backgroundColor: isDarkTheme ? "#000" : "#FFF" }]}>
-      <Top page={"Recetas"} />
+    <View style={styles.app}>
+      <Top page={'Recetas'} />
       <FlatList
         data={data}
         renderItem={renderItem}
@@ -56,19 +54,16 @@ export function Recipes() {
   );
 }
 
-const Item = React.memo(({ data, onPress, isDarkTheme }) => {
-  const imageUrl = useMemo(() => data.imageUrl || "https://via.placeholder.com/150", [data.imageUrl]);
-  const title = useMemo(() => data.Title || "Sin título", [data.Title]);
-  const calories = useMemo(() => data.Calories || "Desconocidas", [data.Calories]);
+const Item = React.memo(({ data, onPress }) => {
+  const imageUrl = useMemo(() => data.imageUrl || 'https://via.placeholder.com/150', [data.imageUrl]);
+  const title = useMemo(() => data.Title || 'Sin título', [data.Title]);
+  const calories = useMemo(() => data.Calories || 'Desconocidas', [data.Calories]);
 
   return (
-    <TouchableOpacity
-      style={[styles.item, { backgroundColor: isDarkTheme ? "#1c1c1e" : "#f0f0f0" }]}
-      onPress={onPress}
-    >
+    <TouchableOpacity style={styles.item} onPress={onPress}>
       <Image source={{ uri: imageUrl }} style={styles.imageRecipe} />
-      <Text style={[styles.title, { color: isDarkTheme ? "#FFF" : "#000" }]}>{title}</Text>
-      <Text style={[styles.calories, { color: isDarkTheme ? "#d3d3d3" : "#333" }]}>Calorías: {calories}</Text>
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.calories}>Calorías: {calories}</Text>
     </TouchableOpacity>
   );
 });
@@ -76,45 +71,51 @@ const Item = React.memo(({ data, onPress, isDarkTheme }) => {
 const styles = StyleSheet.create({
   app: {
     flex: 1,
+    backgroundColor: '#000',
     paddingHorizontal: 10,
   },
   loadingText: {
     marginTop: 50,
-    textAlign: "center",
+    textAlign: 'center',
     fontSize: 24,
+    color: '#FFFFFF',
   },
   errorText: {
     marginTop: 50,
-    textAlign: "center",
+    textAlign: 'center',
     fontSize: 20,
+    color: 'red',
   },
   item: {
     flex: 1,
     marginBottom: 20,
+    backgroundColor: '#1c1c1e',
     borderRadius: 12,
     padding: 10,
-    alignItems: "center",
-    shadowColor: "#000",
+    alignItems: 'center',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.8,
     shadowRadius: 3,
     elevation: 5,
   },
   imageRecipe: {
-    width: "100%",
+    width: '100%',
     height: 200,
     borderRadius: 10,
     marginBottom: 10,
-    resizeMode: "cover",
+    resizeMode: 'cover',
   },
   title: {
     fontSize: 20,
-    fontWeight: "bold",
-    textAlign: "center",
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textAlign: 'center',
     marginBottom: 5,
   },
   calories: {
     fontSize: 16,
-    textAlign: "center",
+    color: '#d3d3d3',
+    textAlign: 'center',
   },
 });
