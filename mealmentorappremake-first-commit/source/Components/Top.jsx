@@ -1,15 +1,17 @@
 import Constants from 'expo-constants';
-import { Button, TouchableOpacity, View, Text, Image, StyleSheet } from 'react-native';
+import { TouchableOpacity, View, Text, Image, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 export function Top({ page }) {
     const navigation = useNavigation();
+
     const handleLogout = () => {
         navigation.reset({
             index: 0,
-            routes: [{ name: 'Home' }], // Cambia 'home' al nombre real de tu pantalla de Login
-          });
-}
+            routes: [{ name: 'Home' }], // Cambia 'Home' al nombre real de tu pantalla de Login
+        });
+    };
 
     return (
         <View style={styles.Top}>
@@ -19,13 +21,11 @@ export function Top({ page }) {
                 alt='Logo-MealMentor'
             />
             <Text style={styles.title}>
-                ealMentor
+                MealMentor
             </Text>
-            <Button 
-                title='Cerrar sesion'
-                onPress={handleLogout}
-                color="#D3A357"
-            />
+            <TouchableOpacity onPress={handleLogout} style={styles.iconButton}>
+                <Ionicons name="log-out-outline" size={24} color="#D3A357" />
+            </TouchableOpacity>
         </View>
     );
 }
@@ -43,13 +43,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 5, 
         backgroundColor: '#0000',
-        
     },
-    buttonContainer: {
-        margin: 20,
-        borderRadius: 10,
-        overflow: 'hidden',
-      },
     Image: {
         height: 45, 
         width: 43,
@@ -60,5 +54,8 @@ const styles = StyleSheet.create({
         fontSize: 24, 
         color: '#D3A357',
         fontWeight: 'bold',
+    },
+    iconButton: {
+        marginLeft: 10,
     },
 });
